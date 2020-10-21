@@ -44,6 +44,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |qualification.name|string|Sí|El nombre de la especialidad (o medicina general en su caso) del médico|
 |qualification.identifier|int|Sí|Número de cédula profesional del médico emitida por la SEP|
 |qualification.issuer|string|Sí|Institución certificadora del médico (escuela que emite el título)|
+|qualification.issuerAddress|string|sí|Dirección de la institución certificadora del médico|
 |gender|string enum|No|El género del médico: `[male,female,other,unknown]`|
 |birthDate|string date|No|La fecha de nacimiento del médico en formato YYYY, YYYY-MM, or YYYY-MM-DD |
 |rfc|string|No|Número de Registro Federal de Contribuyentes (RFC) del médico|
@@ -58,7 +59,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |subject.identifier|string|No|El identificador interno del paciente en la plataforma|
 |subject.rfc|string|No|Número de Registro Federal de Contribuyentes (RFC) del paciente|
 |subject.curp|string|No|Clave Única del Registro de la Población (CURP) del paciente|
-|subject.telephone|string|Sí|Número telefónico del paciente (en formato internacional, +525844392754)|
+|subject.telephone|string|No|Número telefónico del paciente (en formato internacional, +525844392754)|
 |subject.email|string|No|Dirección de correo electrónico del paciente|
 |subject.gender|string enum|No|El género del médico: `[male,female,other,unknown]`|
 |subject.weight|float|No|Peso(en kg) del paciente|
@@ -76,9 +77,10 @@ El payload de las recetas deben de tener la siguiente estructura
 
 |Campo|Tipo|Requerido|Explicación|
 |--|--|--|--|
+|name|string|Sí|El nombre del medicamento en texto plano|
 |dosageInstruction|object Dosage|Sí|Un objeto de tipo Dosage con las instrucciones de |
 |identifier|string|Sí|El identificador interno del medicamento (plataforma emisora)|
-|code|string|Sí|El identificador universal del medicamento, siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
+|code|string|No|El identificador universal del medicamento, siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
 |form|string|No|El identificador de forma farmacéutica siguiendo el diccionario FIDE-FORM-1|
 |fraction|int|Sí|La fracción legislativa del medicamento|
 |ingredient\[\]|object array Ingredient|No|Un arreglo de los ingredientes que tiene el medicamento (pueden ser activos o no activos)|
@@ -134,41 +136,44 @@ fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2fea
 ### Cadena JWT:
 
 ```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0xNTk0OTM2NjEwIiwiaWF0IjoxNTk0OTM2NjEwLCJpc3MiOiJNUkQiLCJtZWQiOnsidWlkIjo1NCwiY3JzIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5vbSI6Ikp1YW4gVXJpYmUgU8OhbmNoZXoiLCJjZHAiOiIxMjMxMjMxMiIsImVzcCI6IkNpcnVnw61hIEdlbmVyYWwiLCJpbmMiOiJVTkFNIiwibHRyIjoiQ2VudHJvIE3DqWRpY28gTmFjaW9uYWwgU2lnbG8gWFhJIEF2LiBDdWF1aHTDqW1vYyAzMzAsIERvY3RvcmVzLCBDdWF1aHTDqW1vYywgMDY3MjAgQ2l1ZGFkIGRlIE3DqXhpY28sIENETVgiLCJ0ZWwiOiI0NDIyNzEyMTYxIn0sInBhYyI6eyJ1aWQiOjE4NzEsIm5vbSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJ0cnQiOlt7InVpZCI6MzU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImluZCI6IlRvbWFyIHVuYSB0YWJsZXRhIGNhZGEgOCBob3JhcyIsInVuaSI6MSwidXBjIjoiMTIzMTIzMTIzMTIzIn1dLCJlbnYiOiJkZXYifQ.FCuGkg6CM5Yk7YpA0aqgml85hQWcoxYK637jtXX1MwymSAMQNXVTvCs1_iUMV-IPfXQw22hx4oy0zBGJbKnM_-qaVSqL-f7adjPJo46HomqSa8fxp9eun73lxNAqa4VxNPxInV8DQv4R-G3FWzx2RFNNTDG5ch7p3QFbdyZl-zs
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoiRklERS0wLjIiLCJqdGkiOiIxMjM0NSIsImlhdCI6MTU5NDkzNjYxMCwiaXNzIjoiTVJEIiwicmVxdWVzdGVyIjp7ImlkZW50aWZpZXIiOjU0LCJjZXJ0U2VyaWFsIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5hbWUiOiJKdWFuIFVyaWJlIFPDoW5jaGV6IiwidGVsZXBob25lIjoiMTIzMTIzMTIiLCJxdWFsaWZpY2F0aW9uIjp7Im5hbWUiOiJDaXJ1Z8OtYSBHZW5lcmFsIiwiaXNzdWVyIjoiVU5BTSIsImlzc3VlckFkZHJlc3MiOiJDZW50cm8gTcOpZGljbyBOYWNpb25hbCBTaWdsbyBYWEkgQXYuIEN1YXVodMOpbW9jIDMzMCwgRG9jdG9yZXMsIEN1YXVodMOpbW9jLCAwNjcyMCBDaXVkYWQgZGUgTcOpeGljbywgQ0RNWCIsImlkZW50aWZpZXIiOiIxMjMxMjMxMjMxMjMifX0sInBhYyI6eyJpZGVudGlmaWVyIjoxODcxLCJuYW1lIjoiTWlndWVsIEdvbnrDoWxleiBGZXJuw6FuZGV6In0sIm1lZGljYXRpb24iOlt7ImlkZW50aWZpZXIiOjM1NzcsImZyYWN0aW9uIjo1LCJuYW1lIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImRvc2FnZUluc3RydWN0aW9uIjp7InRleHQiOiJUb21hciB1bmEgdGFibGV0YSBjYWRhIDggaG9yYXMifX1dLCJlbnZpcm9ubWVudCI6ImRldiJ9.YKJ-JzD3-3d15onBqAw3upsa4TVkpU0NmoC8zAKmwLMb3L2nwTBCgPXC8qu-5q1lr0sjcTVuxn7-ya46QZ6qj27Wq0-8FaMsvrei9ZfbZ1uSI3LqjemaMiHArOXMUn6d0cZJD_m6xcc-Fw-iS1EESu6j22-G46dnuQaAII2NwvI
 ```
 
 ### Payload decodificado:
 
 ```json
 {
-  "prv": "FIDE-0.2",
-  "jti": "54-1871-1594936610",
+  "version": "FIDE-0.2",
+  "jti": "12345",
   "iat": 1594936610,
   "iss": "MRD",
-  "med": {
-    "uid": 54,
-    "crs": "3030303038313030303030343036343439323633",
-    "nom": "Juan Uribe Sánchez",
-    "cdp": "12312312",
-    "esp": "Cirugía General",
-    "inc": "UNAM",
-    "ltr": "Centro Médico Nacional Siglo XXI Av. Cuauhtémoc 330, Doctores, Cuauhtémoc, 06720 Ciudad de México, CDMX",
-    "tel": "4422712161"
+  "requester": {
+    "identifier": 54,
+    "certSerial": "3030303038313030303030343036343439323633",
+    "name": "Juan Uribe Sánchez",
+    "telephone": "12312312",
+    "qualification":{
+      "name": "Cirugía General",
+      "issuer": "UNAM",
+      "issuerAddress":"Centro Médico Nacional Siglo XXI Av. Cuauhtémoc 330, Doctores, Cuauhtémoc, 06720 Ciudad de México, CDMX",
+      "identifier":"123123123123"
+    }
   },
   "pac": {
-    "uid": 1871,
-    "nom": "Miguel González Fernández"
+    "identifier": 1871,
+    "name": "Miguel González Fernández"
   },
-  "trt": [
+  "medication": [
     {
-      "uid": 3577,
-      "nom": "ANALGEN 220MG TAB C/20",
-      "ind": "Tomar una tableta cada 8 horas",
-      "uni": 1,
-      "upc":"123123123123"
+      "identifier": 3577,
+      "fraction":5,
+      "name": "ANALGEN 220MG TAB C/20",
+      "dosageInstruction":{
+         "text":"Tomar una tableta cada 8 horas"
+      }
     }
   ],
-  "env": "dev"
+  "environment": "dev"
 }
 ```
 
