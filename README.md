@@ -37,7 +37,6 @@ El payload de las recetas deben de tener la siguiente estructura
 |identifier|string|No|El identificador interno del médico (en la plataforma emisora de la receta).|
 |title|string|No|El título del médico (Dr., Dra., FT, etc.)|
 |name|string|Sí|El nombre del médico que emite la receta|
-|rfc|string|No|Email del médico que emite la receta|
 |certSerial|string|Sí, en recetas de medicamentos controlados|El número serial en hexadecimal del certificado público del médico (archivo .cer emitido por el SAT)|
 |telephone|string|Sí|Número telefónico del médico (en formato internacional, +525844392754)|
 |email|string|No|Dirección de correo electrónico del médico|
@@ -119,27 +118,16 @@ El objeto Dosage se compone de los siguientes campos:
 
 ## Estructura de QR
 
-Los QR de recetas electrónicas FIDE son autocontenidos, y toda la receta puede incluirse en un solo código QR. EL código QR debe de comenzar con las letras `FIDE:` seguidas de la cadena JWT de la receta para poder ser interpretado por los lectores de QR de las farmacias.
+Un QR de receta FIDE contiene un apuntador a un servicio REST que proporcione mediante una peticion `GET` el texto plano (`text/plain`)  del JWT generado al firmar la receta. La estructura del contenido del QR debe de contener los siguientes elementos:
+
+1. El identificador de serivio `fide` seguido por un caracter de dos puntos `:`.
+2. El URL del endpoint al cual se va a acceder, con los siguientes parámetros GET:
+   * iure: el identificador único de la receta electrónica
+   * sd: el hash SHA-256 del JWT de la receta. Este parámetro es necesario para prevenir el filtrado de información personal mediante ataques por fuerza bruta.
 
 ```
-FIDE:eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0xNTk0OTM2NjEwIiwiaWF0IjoxNTk0OTM2NjEwLCJpc3MiOiJNUkQiLCJtZWQiOnsidWlkIjo1NCwiY3JzIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5vbSI6Ikp1YW4gVXJpYmUgU8OhbmNoZXoiLCJjZHAiOiIxMjMxMjMxMiIsImVzcCI6IkNpcnVnw61hIEdlbmVyYWwiLCJpbmMiOiJVTkFNIiwibHRyIjoiQ2VudHJvIE3DqWRpY28gTmFjaW9uYWwgU2lnbG8gWFhJIEF2LiBDdWF1aHTDqW1vYyAzMzAsIERvY3RvcmVzLCBDdWF1aHTDqW1vYywgMDY3MjAgQ2l1ZGFkIGRlIE3DqXhpY28sIENETVgiLCJ0ZWwiOiI0NDIyNzEyMTYxIn0sInBhYyI6eyJ1aWQiOjE4NzEsIm5vbSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJ0cnQiOlt7InVpZCI6MzU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImluZCI6IlRvbWFyIHVuYSB0YWJsZXRhIGNhZGEgOCBob3JhcyIsInVuaSI6MSwidXBjIjoiMTIzMTIzMTIzMTIzIn1dLCJlbnYiOiJkZXYifQ.FCuGkg6CM5Yk7YpA0aqgml85hQWcoxYK637jtXX1MwymSAMQNXVTvCs1_iUMV-IPfXQw22hx4oy0zBGJbKnM_-qaVSqL-f7adjPJo46HomqSa8fxp9eun73lxNAqa4VxNPxInV8DQv4R-G3FWzx2RFNNTDG5ch7p3QFbdyZl-zs
+fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 ```
-
-Es posible que, por limitaciones de impresión o resolución de pantalla, la receta entera no quepa en un solo código QR. En este caso se puede utilizar la técnica de "chunking". Esto se puede lograr "cortando" el JWT de la receta (en los pedazos que sean necesarios, a discreción del sistema emisor.) e insertándolos en un qr que comience con las letras `CFIDE:X-Y:` seguidas del JWT de la receta; donde X representa el índice del código QR actual (comenzando en cero `0`) y Y representa la cantidad totales de códigos QR de la receta. 
-
-```
-CFIDE:0-2:eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0xNTk0OTM2NjEwIiwiaWF0IjoxNTk0OTM2NjEwLCJpc3MiOiJNUkQiLCJtZWQiOnsidWlkIjo1NCwiY3JzIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5vbSI6Ikp1YW4gVXJpYmUgU8OhbmNoZXoiLCJjZHAiOiIxMjMxMjMxMiIsImVzcCI6IkNpcnVnw61hIEdlbmVyYWwiLCJpbmMiOiJVTkFNIiwibHRyIjoiQ2VudHJvIE3DqWRpY28gTmFjaW9uYWwgU2lnbG8gWFhJIEF2LiBDdWF1aHTDqW1vYyAzMzAsIERvY3RvcmVzLCBDdWF1aHTDqW1vYywgMDY3MjAgQ2l1ZGFkIGRlIE3DqXhpY28sIENETVgiLCJ0Z
-
-CFIDE:1-2:WwiOiI0NDIyNzEyMTYxIn0sInBhYyI6eyJ1aWQiOjE4NzEsIm5vbSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJ0cnQiOlt7InVpZCI6MzU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImluZCI6IlRvbWFyIHVuYSB0YWJsZXRhIGNhZGEgOCBob3JhcyIsInVuaSI6MSwidXBjIjoiMTIzMTIzMTIzMTIzIn1dLCJlbnYiOiJkZXYifQ.FCuGkg6CM5Yk7YpA0aqgml85hQWcoxYK637jtXX1MwymSAMQNXVTvCs1_iUMV-IPfXQw22hx4oy0zBGJbKnM_-qaVSqL-f7adjPJo46HomqSa8fxp9eun73lxNAqa4VxNPxInV8DQv4R-G3FWzx2RFNNTDG5ch7p3QFbdyZl-zs
-```
-
-Si se desea, también se puede utilizar un QR apuntador a la receta original:
-
-```
-FIDEURL:https://mirecetadigital.com/receta/zU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRy
-```
-
-La URL debe de ser una liga directa al texto del JWT de la receta electrónica FIDE. El header de codificación debe de ser `text/plain` y el endpoint debe de responder a una solicitud REST de tipo `GET` por parte del cliente.
 
 ## Ejemplo de una receta electrónica con el estándar FIDE-0.2
 
@@ -186,7 +174,7 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0
 
 ### QR de la receta:
 
-![Receta QR](ejemplo_receta_fide_0-2.png?raw=true "FIDE:eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0xNTk0OTM2NjEwIiwiaWF0IjoxNTk0OTM2NjEwLCJpc3MiOiJNUkQiLCJtZWQiOnsidWlkIjo1NCwiY3JzIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5vbSI6Ikp1YW4gVXJpYmUgU8OhbmNoZXoiLCJjZHAiOiIxMjMxMjMxMiIsImVzcCI6IkNpcnVnw61hIEdlbmVyYWwiLCJpbmMiOiJVTkFNIiwibHRyIjoiQ2VudHJvIE3DqWRpY28gTmFjaW9uYWwgU2lnbG8gWFhJIEF2LiBDdWF1aHTDqW1vYyAzMzAsIERvY3RvcmVzLCBDdWF1aHTDqW1vYywgMDY3MjAgQ2l1ZGFkIGRlIE3DqXhpY28sIENETVgiLCJ0ZWwiOiI0NDIyNzEyMTYxIn0sInBhYyI6eyJ1aWQiOjE4NzEsIm5vbSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJ0cnQiOlt7InVpZCI6MzU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImluZCI6IlRvbWFyIHVuYSB0YWJsZXRhIGNhZGEgOCBob3JhcyIsInVuaSI6MSwidXBjIjoiMTIzMTIzMTIzMTIzIn1dLCJlbnYiOiJkZXYifQ.FCuGkg6CM5Yk7YpA0aqgml85hQWcoxYK637jtXX1MwymSAMQNXVTvCs1_iUMV-IPfXQw22hx4oy0zBGJbKnM_-qaVSqL-f7adjPJo46HomqSa8fxp9eun73lxNAqa4VxNPxInV8DQv4R-G3FWzx2RFNNTDG5ch7p3QFbdyZl-zs")
+![Receta QR](ejemplo_receta_fide_qr.png?raw=true "fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
 
 ## Proceso de Validación de recetas 
 
@@ -207,7 +195,7 @@ Las recetas emitidas con el estándar de FIDE no requieren una relación de conf
 Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
 
 1. Extraer información del payload del JWT. Esto se logra decodificando el payload (la sección del JWT comprendida entre dos puntos (.)) mediante el estándar [Base64URL](https://base64.guru/standards/base64url) y después interpretándolo como una cadena en formato JSON.
-2. Obtener el número de serie del certificado digital del médico (el campo `med.crs`).
+2. Obtener el número de serie del certificado digital del médico (el campo `requester.certSerial`).
 3. Solicitar al API del SAT el certificado del médico (en la url `https://apisnet.col.gob.mx/wsSignGob/apiV1/Obtener/Certificado?serial=<elnumeroserialdelmedico>`).
 4. Verificar que los datos del certificado coincidan con los datos del médico (su cédula profesional se encuentra en el campo `med.cdp`).
 5. Validar el JWT de la receta mediante el estándar JWT y el algoritmo RS256.
