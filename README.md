@@ -216,10 +216,23 @@ Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
 Una vez que estos pasos están completados puedes proceder a verificar el estátus de la receta. Si la receta no contiene medicamentos controlados puedes solamente utilizar el paso 1 y surtir la receta.
 
 
-## Diccionarios de valores y metodologías de datos
+## Verificación de Estatus de Receta en Unidad Centralizadora
+Para llevar a cabo una solicitud de estatus sobre la unidad central, se requiere el IURD correspondiente, así como el sello hash sha256 del contenido total del JWT, ambos separados por un guión.
+
+Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emite una respuesta con los siguientes datos:
+
+|fecha| Timestamp en que se emite la respuesta|
+|iure|Identificador Único de la Receta Electrónica|
+|estatus|Sin Surtir, Surtido Parcial, Surtido Completo, No Vigente|
+|tratamiento[]|Listado de tratamientos en la receta|
+|tratamiento[uid].cantidad|Cantidad pendiente de entregar del medicamento|
+|tratamiento[uid].unidad|Unidad referente a la presentación del medicamento|
+
+Observaciones sobre seguridad y privacidad:
+* La Unidad Centralizadora no expone datos sensibles relativos al médico o al paciente,
+* La única manera de saber qué medicamentos se han surtido de la receta es tener la receta físicamente para poder correr el algoritmo sha-256 sobre ella y averiguar su llave.
 
 ### FIDE-FREQUENCY-1 Frecuencias de tratamiento
-
 Las frecuencias de tratamiento se indican con la siguiente estructura:
 
 ```
@@ -236,24 +249,31 @@ Donde
 
 Si se necesitan indicaciones más complejas que lo que este algoritmo permite se puede utilizar el parámetro trt[].ind y describir el tratamiento textualmente.
 
+### Diccionario de medidas
+Las principales unidades son aquellas usadas para medir peso, volumen y cantidad de una sustancia.
+* Peso: expresado en Kg, g, mg, mcg
+* Volumen: expresado en litros, ml=cc
+* Cantidad de una Sustancia: expresado en Moles (Mol, milimoles)
+* La concentración de un fármaco se expresa usualmente en miligramos (mg)
+La siguiente tabla muestra las medidas utilizables en el estándar. Todos los siguientes valores son sensibles a capitalización:
+|Nombre|Valor|
+|Litros|L|
+|Mililitros|mL|
+|Milimol|Mmol|
+|Miliequivalente|mEq|
+|Kilogramos|Kg|
+|Gramos|G|
+|Miligramos|Mg|
+|Microgramos|Mcg|
+|Horas|hrs|
+|Unidades internacionales (unidad de medida para insulinas, vitaminas y penicilinas)|UI|
+|Libras|Lb|
+|Onzas|Oz|
+|Galones|Gal|
+|Dosis|dos|
+|Nebulizaciones|nbl|
 
-## Verificación de Estatus de Receta
-Para llevar a cabo una solicitud de estatus sobre la unidad central, se requiere el IURD correspondiente, así como el sello hash sha256 del contenido total del JWT, ambos separados por un guión.
-
-Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emite una respuesta con los siguientes datos:
-
-|fecha| Timestamp en que se emite la respuesta|
-|iure|Identificador Único de la Receta Electrónica|
-|estatus|Sin Surtir, Surtido Parcial, Surtido Completo, No Vigente|
-|tratamiento[]|Listado de tratamientos en la receta|
-|tratamiento[uid].cantidad|Cantidad pendiente de entregar del medicamento|
-|tratamiento[uid].unidad|Unidad referente a la presentación del medicamento|
-
-Observaciones sobre seguridad y privacidad:
-* La Unidad Centralizadora no expone datos sensibles relativos al médico o al paciente,
-* La única manera de saber qué medicamentos se han surtido de la receta es tener la receta físicamente para poder correr el algoritmo sha-256 sobre ella y averiguar su llave.
-
-## Transformaciones de Unidad / Cantidad
+### Transformaciones de Unidad / Cantidad
 Para entregar la información más completa, el sistema de la Unidad Centralizadora, realizará una transformación basada en la duración del tratamiento, para calcular la cantidad total de unidades que se deben surtir (tomando como base la forma farmacéutica). 
 
 Por ejemplo:
@@ -271,37 +291,59 @@ Por ejemplo:
 = 150 mL
 ```
 
-## Propuesta para evitar doble gasto:
+## Notificación de Despacho
+Cada entidad farmacológica que realice el despacho de medicamentos realizará una notificación a la unidad centralizadora empleando el servicio de notificación de despapacho. De ésta manera, la entidad centralizadora podrá llevar el seguimiento de los medicamentos surtidos y notificar a su vez a los interesados. 
 
-AVISO: esto es una propuesta y no se encuentra aún implementado, se está trabajando en una prueba de concepto que se añadirá a este repositorio próximamente.
+### Objeto de Despacho
+|fecha|Timestamp del momento en que se efectúa el surtido de la receta|
+|iure|Identificador Único de la Receta electrónical a la que hace referencia|
+|dispenseType|Completo o Parcial|
+|performer|Objeto Surtidor con información de quien realiza el despacho|
+|dispenseRequest[]| Arreglo de objetos con información sobre los elementos que se despachan| 
 
-Uno de los problemas de las recetas electrónicas es es hecho de requerir que no se pueda realizar un "doble gasto" de ésta; es decir, que un paciente no pueda surtir la misma receta dos veces.
+### Objeto Surtidor
+|performer|Información de quién está realizado el despacho de la receta|
+|performer.identifier|Identificador de la entidad que realiza el despacho del medicamento|
+|performerType|Tipo de surtidor (Farmacia Física, Farmacia Digital, etc)|
+|performer.licence|Número de licencia sanitaria del establecimiento|
+|performer.type|Tipo de establecimiento relativo a la licencia sanitaria|
+|performer.rfc|Registro Federal de Causantes asociado a la entidad que realiza el despacho de la receta|
+|performer.responsable|Datos completos del responsable del despacho|
+|performer.responsable.id|Identificador en la plataforma del responsable|
+|performer.responsable.name|Nombre del responsable que realiza el despacho|
+|performer.address|Objeto Dirección del responsable|
 
-Se propone implementar un sistema basado en la tecnología [IPFS](https://ipfs.io/) y [Orbitdb](https://orbitdb.org/) para manejar una base de datos distribuida sencilla con las recetas surtidas por cada farmacia. De esta manera los actores interesados podrían suscribirse a las bases de datos de cada farmacia y ver un registro de las recetas que se han surtido en cada una de ellas. Estas bases de datos serían públicas y descentralizadas, para aumentar la confiabilidad y requerir en la menor cantidad de un órgano central regulador.
+### Objeto de Surtido
+|dispenseRequest[treatment.uid].quantity|Número de ítems que se despachan |
+|dispenseRequest[treatment.uid].form|Forma en que se entrega el medicamento (caja, envase, ampolleta, etc)|
+|dispenseRequest[treatment.uid].unit|Unidad de medicamento en el envase (ej: ml, pastillas, etc)|
+|dispenseRequest[treatment.uid].content|Cantidad de unidades del medicamento en el envase|
+|dispenseRequest[treatment.uid].substitution|Información relativa a la sustitución|
 
-Se propone un sistema de bases de datos con esquema key-value, en el cual se almacenen de manera muy sencilla valores que no expongan datos personales del paciente, doctor y contenidos de la receta. Los valores de las bases de datos podrían tener la siguiente estructura:
+### Objeto de Sustitución
+|substitution|Información completa del medicamento que realiza la sustitución durante el despacho|
+|substitution.reason|Razón por la que se realiza la sustitución|
+|substitution.concept|Tipo de sustitución: Equivalente, ComposiciónEquivalente, ComposiciónMarca, ComposiciónGenerica, TerapeuticaAlternativa, TerapeuticaMarca, TerapeuticaGenerica, Formulario, Ninguna|
+|substitution.medication|Objeto medicamento que sustituye al tratamiento original|
 
-1. La llave de la entrada (key) sería una amalgamación de el identificador de la receta (jti) y el hash sha256 del contenido total del JWT, separados por un guión.
-2. El valor (value) de la entrada consistiría de un arreglo de entradas estructuradas de la siguiente manera (estos valores estarían unidos con un guión):
-   * El índice del medicamento surtido (de acuerdo al arreglo en el parámetro `trt` de la receta).
-   * La cantidad de veces que el medicamento fue surtido.
+## Notificación de Evento de Seguimiento
+De la misma manera, las entidades de seguimiento pueden alimentar a la Unidad Centralizadora con eventos de seguimiento sobre los medicamentos para mantener informados a los interesados
 
-Un ejemplo de una entrada a las bases de datos podría ser esta:
+|date|Timestamp del momento en que se registró el evento
+|iure|Identificador Único de la Receta Electrónica|
+|identifier|Identificador del evento|
+|eventType|Categoría del evento que se está registrando, por ejemplo, “TomaDeMedicamento” o “ReaccionAdversa”|
+|requesterId|Identificador de la plataforma que registra el evento|
+|detail|Detalle del evento|
+|detectedIssue|Arreglo de Objetos de incidencia que se reportan en el evento (si existen)|
 
-```json
-{
-   "54-1871-1594936610-b12c031ec4ae2ef38bf14decdc85be9ff9bf4160f88a2bfdbebb4e8ba03d56dd":"0-1,1-2"
-}
-```
-Esta entrada indicaría que a la receta `54-1871-1594936610` se le surtió el primer medicamento en una unidad y el segundo en dos unidades.
+# Objeto de Incidencia
+|detectedIssue.implicated[]|Arreglo de Objetos de Medicamentos que se relacionan con el evento|
+|detectedIssue.severity|Alto, Moderado, Bajo|
+|detectedIssue.evidence|Documentación referente a la incidencia|
+|detectedIssue.mitigation|Acciones realizadas para resolver el problema|
+|detectedIssue.mitigation[].action|Acción realizada|
+|detectedIssue.mitigation[].date|Fecha en que se realiza la acción|
+|detectedIssue.mitigation[].author|Responsable de la acción realizada|
 
-Esta manera de compartición de datos asegura los siguientes puntos:
 
-* Ninguna información personal puede deducirse de las entradas de la base de datos pública.
-* La única manera de saber qué medicamentos se han surtido de la receta es tener a la receta físicamente para poder correr el algoritmo sha-256 sobre ella y averiguar su llave. 
-* El carácter distribuido de la base de datos permite redundancia de datos y resistencia a fallos, al cada parte tener una copia de las bases de datos de las demás partes.
-* No se requiere la centralización de datos en una entidad reguladora.
-
-### ¿Por qué no blockchain?
-
-El sistema de archivos IPFS es en sí una tecnología P2P con criptografía de árbol de Merkle, solamente que los datos no se almacenan en bloques, por lo que no hay que esperar a que un bloque se mine para poder insertar los datos. Esto elimina complejidad a la base de datos y permite insertar valores en tiempo real.
