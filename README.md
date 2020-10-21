@@ -188,12 +188,23 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0
 
 ![Receta QR](ejemplo_receta_fide_0-2.png?raw=true "FIDE:eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0xNTk0OTM2NjEwIiwiaWF0IjoxNTk0OTM2NjEwLCJpc3MiOiJNUkQiLCJtZWQiOnsidWlkIjo1NCwiY3JzIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5vbSI6Ikp1YW4gVXJpYmUgU8OhbmNoZXoiLCJjZHAiOiIxMjMxMjMxMiIsImVzcCI6IkNpcnVnw61hIEdlbmVyYWwiLCJpbmMiOiJVTkFNIiwibHRyIjoiQ2VudHJvIE3DqWRpY28gTmFjaW9uYWwgU2lnbG8gWFhJIEF2LiBDdWF1aHTDqW1vYyAzMzAsIERvY3RvcmVzLCBDdWF1aHTDqW1vYywgMDY3MjAgQ2l1ZGFkIGRlIE3DqXhpY28sIENETVgiLCJ0ZWwiOiI0NDIyNzEyMTYxIn0sInBhYyI6eyJ1aWQiOjE4NzEsIm5vbSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJ0cnQiOlt7InVpZCI6MzU3Nywibm9tIjoiQU5BTEdFTiAyMjBNRyBUQUIgQy8yMCIsImluZCI6IlRvbWFyIHVuYSB0YWJsZXRhIGNhZGEgOCBob3JhcyIsInVuaSI6MSwidXBjIjoiMTIzMTIzMTIzMTIzIn1dLCJlbnYiOiJkZXYifQ.FCuGkg6CM5Yk7YpA0aqgml85hQWcoxYK637jtXX1MwymSAMQNXVTvCs1_iUMV-IPfXQw22hx4oy0zBGJbKnM_-qaVSqL-f7adjPJo46HomqSa8fxp9eun73lxNAqa4VxNPxInV8DQv4R-G3FWzx2RFNNTDG5ch7p3QFbdyZl-zs")
 
-## Validación de recetas sin relación de confianza
+## Proceso de Validación de recetas 
 
-Las recetas emitidas con el estándar de FIDE no requieren una relación de confianza entre las farmacias y el emisor de recetas. Cada receta electrónica contiene dentro de sí misma los métodos para verificar su veracidad y validez.
+1. El paciente acude a una Farmacia (digital o físicamente) con una Receta Electrónica 
+2. Si se trata de una farmacia física, el empleado escanea el QR de la receta para obtener la URL de la misma, si se trata de una farmacia digital, el programa de la farmacia recibe la URL de la receta directamente
+3. El programa de farmacia hace una petición al URL de la receta
+4. El servidor externo regresa el JWT
+5. El programa de farmacia verifica la validez con el estándar JWT la receta
+6. El programa de farmacia solicita a la entidad centralizadora el estátus de la receta.
+7. La entidad regresa los datos de la receta, o un error si ese médico no existe o la receta no es válida.
+8. El programa de farmacia se encarga del despacho y avisar a la entidad central acerca del surtido de la receta.
+9. La entidad centralizadora despacha un webhook al endpoint contenido en el cuerpo del JWT (si es que se contiene).
+
+## Verificación de veracidad de recetas sin relación de confianza
+
+Las recetas emitidas con el estándar de FIDE no requieren una relación de confianza entre las farmacias y el emisor de recetas. Cada receta electrónica contiene dentro de sí misma los métodos para verificar su veracidad.
 
 Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
-
 
 1. Extraer información del payload del JWT. Esto se logra decodificando el payload (la sección del JWT comprendida entre dos puntos (.)) mediante el estándar [Base64URL](https://base64.guru/standards/base64url) y después interpretándolo como una cadena en formato JSON.
 2. Obtener el número de serie del certificado digital del médico (el campo `med.crs`).
@@ -202,7 +213,7 @@ Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
 5. Validar el JWT de la receta mediante el estándar JWT y el algoritmo RS256.
 6. Validar que el campo `env` de la receta sea igual a "dist".
 
-Una vez que estos pasos están completados puedes proceder a surtir la receta. Si la receta no contiene medicamentos controlados puedes solamente utilizar el paso 1 y surtir la receta.
+Una vez que estos pasos están completados puedes proceder a verificar el estátus de la receta. Si la receta no contiene medicamentos controlados puedes solamente utilizar el paso 1 y surtir la receta.
 
 
 ## Diccionarios de valores y metodologías de datos
@@ -225,6 +236,40 @@ Donde
 
 Si se necesitan indicaciones más complejas que lo que este algoritmo permite se puede utilizar el parámetro trt[].ind y describir el tratamiento textualmente.
 
+
+## Verificación de Estatus de Receta
+Para llevar a cabo una solicitud de estatus sobre la unidad central, se requiere el IURD correspondiente, así como el sello hash sha256 del contenido total del JWT, ambos separados por un guión.
+
+Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emite una respuesta con los siguientes datos:
+
+|fecha| Timestamp en que se emite la respuesta|
+|iure|Identificador Único de la Receta Electrónica|
+|estatus|Sin Surtir, Surtido Parcial, Surtido Completo, No Vigente|
+|tratamiento[]|Listado de tratamientos en la receta|
+|tratamiento[uid].cantidad|Cantidad pendiente de entregar del medicamento|
+|tratamiento[uid].unidad|Unidad referente a la presentación del medicamento|
+
+Observaciones sobre seguridad y privacidad:
+* La Unidad Centralizadora no expone datos sensibles relativos al médico o al paciente,
+* La única manera de saber qué medicamentos se han surtido de la receta es tener la receta físicamente para poder correr el algoritmo sha-256 sobre ella y averiguar su llave.
+
+## Transformaciones de Unidad / Cantidad
+Para entregar la información más completa, el sistema de la Unidad Centralizadora, realizará una transformación basada en la duración del tratamiento, para calcular la cantidad total de unidades que se deben surtir (tomando como base la forma farmacéutica). 
+
+Por ejemplo:
+```
+1x8x15 cápsulas 
+= Una cápsula cada ocho horas por quince días 
+= 3 cápsulas diarias por quince días 
+= 45 cápsulas.
+```
+```
+2cucharaditax8x5 
+= Dos cucharaditas (5 mL) cada ocho horas por 5 días
+= 10 mL cada ocho horas por 5 días
+= 30 mL por 5 días
+= 150 mL
+```
 
 ## Propuesta para evitar doble gasto:
 
