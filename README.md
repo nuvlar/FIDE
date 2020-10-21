@@ -79,7 +79,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |dosageInstruction|object Dosage|Sí|Un objeto de tipo Dosage con las instrucciones de |
 |identifier|string|Sí|El identificador interno del medicamento (plataforma emisora)|
 |code|string|Sí|El identificador universal del medicamento, siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
-|form|int|No|El identificador de forma farmacéutica siguiento el estándar [SNOMEDCTFormCodes](https://www.hl7.org/fhir/valueset-medication-form-codes.html)|
+|form|string|No|El identificador de forma farmacéutica siguiendo el diccionario FIDE-FORM-1|
 |fraction|int|Sí|La fracción legislativa del medicamento|
 |ingredient\[\]|object array Ingredient|No|Un arreglo de los ingredientes que tiene el medicamento (pueden ser activos o no activos)|
 
@@ -174,7 +174,7 @@ eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcnYiOiJNUkQtMC4xIiwianRpIjoiNTQtMTg3MS0
 
 ### QR de la receta:
 
-![Receta QR](ejemplo_receta_fide_qr.png?raw=true "fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
+![Receta QR](fide_qr.png?raw=true "fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
 
 ## Proceso de Validación de recetas 
 
@@ -238,6 +238,39 @@ Donde
 * Los signos `x` son literales y no son modificables, se utilizan como separación.
 
 Si se necesitan indicaciones más complejas que lo que este algoritmo permite se puede utilizar el parámetro trt[].ind y describir el tratamiento textualmente.
+
+
+### FIDE-FORM-1 Diccionario de formas farmacéuticas
+
+Este diccionario se utiliza en cualquier lugar en el que se requiera definir una forma farmacéutica de un medicamento:
+
+|Valor|Explicación|
+|--|--|
+|aer|Aerosol|
+|cap|Cápsulas|
+|clp|Cápsulas de liberación prolongada|
+|com|Comprimidos|
+|crm|Crema|
+|gel|Gel|
+|jar|Jarabe|
+|ovu|Óvulo|
+|par|Parches|
+|pst|Pasta|
+|plv|Polvo|
+|pmd|Pomada|
+|shm|Shampoo|
+|sld|Sólido|
+|sol|Solución|
+|sin|Solución inyectable|
+|spr|Spray|
+|spn|Suspensión|
+|spt|Supositorio|
+|tab|Tabletas|
+|tlp|Tabletas de liberación prolongada|
+|tds|Tabletas dispersables|
+|tef|Tabletas efervescentes|
+|ung|Ungüento|
+|otr|Otro|
 
 ### Diccionario de medidas
 Las principales unidades son aquellas usadas para medir peso, volumen y cantidad de una sustancia.
