@@ -79,9 +79,10 @@ El payload de las recetas deben de tener la siguiente estructura
 |--|--|--|--|
 |name|string|Sí|El nombre del medicamento en texto plano|
 |dosageInstruction|object Dosage|Sí|Un objeto de tipo Dosage con las instrucciones de |
-|identifier|string|Sí|El identificador interno del medicamento (plataforma emisora)|
-|code|string|No|El identificador universal del medicamento, siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
+|identifier|string|Sí|El identificador interno del medicamento (SKU de plataforma emisora)|
+|code|string|No|El identificador universal del medicamento (EAN), siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
 |form|string|No|El identificador de forma farmacéutica siguiendo el diccionario FIDE-FORM-1|
+|admin|string|Si|El identificador de la vía de administración siguiendo el diccionaro FIDE-ADMIN-1|
 |fraction|int|Sí|La fracción legislativa del medicamento|
 |ingredient\[\]|object array Ingredient|No|Un arreglo de los ingredientes que tiene el medicamento (pueden ser activos o no activos)|
 
@@ -219,9 +220,9 @@ Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emit
 |fecha| Timestamp en que se emite la respuesta|
 |iure|Identificador Único de la Receta Electrónica|
 |estatus|Sin Surtir, Surtido Parcial, Surtido Completo, No Vigente|
-|tratamiento[]|Listado de tratamientos en la receta|
-|tratamiento[uid].cantidad|Cantidad pendiente de entregar del medicamento|
-|tratamiento[uid].unidad|Unidad referente a la presentación del medicamento|
+|tratamiento\[\]|Listado de tratamientos en la receta|
+|tratamiento\[uid\].cantidad|Cantidad pendiente de entregar del medicamento|
+|tratamiento\[uid\].unidad|Unidad referente a la presentación del medicamento|
 
 Observaciones sobre seguridad y privacidad:
 * La Unidad Centralizadora no expone datos sensibles relativos al médico o al paciente,
@@ -332,7 +333,7 @@ Cada entidad farmacológica que realice el despacho de medicamentos realizará u
 |iure|Identificador Único de la Receta electrónical a la que hace referencia|
 |dispenseType|Completo o Parcial|
 |performer|Objeto Surtidor con información de quien realiza el despacho|
-|dispenseRequest[]| Arreglo de objetos con información sobre los elementos que se despachan| 
+|dispenseRequest\[\]| Arreglo de objetos con información sobre los elementos que se despachan| 
 
 ### Objeto Surtidor
 
