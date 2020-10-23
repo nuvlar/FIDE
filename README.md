@@ -29,6 +29,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |requester|object Requester|Sí|Un objeto Requester con los datos del médico que emite la receta|
 |subject|object Subject|Sí|Los datos del paciente|
 |medication[]|object array Medication|Sí|El tratamiento (medicamentos) que el paciente necesita|
+|diagnostics[]|object array Diagnostic|No|Los diagnósticos asociados a la receta|
 
 
 ### Objeto Requester
@@ -37,14 +38,15 @@ El payload de las recetas deben de tener la siguiente estructura
 |identifier|string|No|El identificador interno del médico (en la plataforma emisora de la receta).|
 |title|string|No|El título del médico (Dr., Dra., FT, etc.)|
 |name|string|Sí|El nombre del médico que emite la receta|
-|certSerial|string|Sí, en recetas de medicamentos controlados|El número serial en hexadecimal del certificado público del médico (archivo .cer emitido por el SAT)|
+|certSerial|string|Sí, en recetas de medicamentos controlados|URL de consulta del El del certificado público del médico (archivo .cer). Éste puede provenir del SAT o de alguna entidad
+diferente, como la AHM o secretaría de economía|
 |telephone|string|Sí|Número telefónico del médico (en formato internacional, +525844392754)|
 |email|string|No|Dirección de correo electrónico del médico|
-|qualification|object|Sí|Objeto conteniendo la formación del médico|
-|qualification.name|string|Sí|El nombre de la especialidad (o medicina general en su caso) del médico|
-|qualification.identifier|int|Sí|Número de cédula profesional del médico emitida por la SEP|
-|qualification.issuer|string|Sí|Institución certificadora del médico (escuela que emite el título)|
-|qualification.issuerAddress|string|sí|Dirección de la institución certificadora del médico|
+|qualification[]|object array Qualification|Sí|Arreglo de objetos de conteniendo la formación del médico|
+|qualification[].name|string|Sí|El nombre de la especialidad (o medicina general en su caso) del médico|
+|qualification[].identifier|string|Sí|Número de cédula profesional del médico emitida por la SEP|
+|qualification[].issuer|string|Sí|Institución certificadora del médico (escuela que emite el título)|
+|qualification[].year|int|No|Año de expedición de la cédula|
 |gender|string enum|No|El género del médico: `[male,female,other,unknown]`|
 |birthDate|string date|No|La fecha de nacimiento del médico en formato YYYY, YYYY-MM, or YYYY-MM-DD |
 |rfc|string|No|Número de Registro Federal de Contribuyentes (RFC) del médico|
@@ -65,7 +67,6 @@ El payload de las recetas deben de tener la siguiente estructura
 |subject.weight|float|No|Peso(en kg) del paciente|
 |subject.height|float|No|Altura (en cm) del paciente|
 |subject.birthDate|string date|No|La fecha de nacimiento del paciente en formato YYYY, YYYY-MM, or YYYY-MM-DD |
-|subject.diagnosis|string|No|Diagnóstico del paciente|
 |subject.bloodPressure|object|No|objeto con presión arterial del paciente (mmHg)|
 |subject.bloodPressure.systolic|int|Sí|Presión sistólica del paciente|
 |subject.bloodPressure.diastolic|int|Sí|Presión diastólica del paciente|
@@ -78,14 +79,16 @@ El payload de las recetas deben de tener la siguiente estructura
 |Campo|Tipo|Requerido|Explicación|
 |--|--|--|--|
 |name|string|Sí|El nombre del medicamento en texto plano|
+|sustance|string|Sí|La composición o sustancias activas del medicamento en texto plano|
 |dosageInstruction|object Dosage|Sí|Un objeto de tipo Dosage con las instrucciones de |
 |identifier|string|Sí|El identificador interno del medicamento (SKU de plataforma emisora)|
 |code|string|No|El identificador universal del medicamento (EAN), siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
 |form|string|No|El identificador de forma farmacéutica siguiendo el diccionario FIDE-FORM-1|
 |admin|string|Si|El identificador de la vía de administración siguiendo el diccionaro FIDE-ADMIN-1|
 |fraction|int|Sí|La fracción legislativa del medicamento|
+|initDate|int (unixtime)|No|Fecha de inicio del tratamiento|
+|diagnostics[]|object array Diagnostic|No|Diagnósticos relacionados con el medicamento|
 |ingredient\[\]|object array Ingredient|No|Un arreglo de los ingredientes que tiene el medicamento (pueden ser activos o no activos)|
-
 
 ### Objeto Ingredient
 
@@ -118,6 +121,14 @@ El objeto Dosage se compone de los siguientes campos:
 |additionalInstructions|int enum|No|El código de instrucciones adicionales según [SNOMED CT Additional Dosage Instructions](https://www.hl7.org/fhir/valueset-additional-instruction-codes.html)|
 |frequency|string FIDE-FREQUENCY-1|No|Describe la frecuencia del tratamiento según la metodología FIDE-FREQUENCY-1|
 
+## Objeto Diagnostic
+
+|Campo|Tipo|Requerido|Explicación|
+|--|--|--|--|
+|code|string|Si|Código CIE del diagnóstico|
+|versionCode|int|Si|Versión CIE|
+|name|string|Si|Diangóstico en texto plano|
+|codeName|string|Si|Nombre del diagnóstico asociado CIE|
 
 ## Estructura de QR
 
