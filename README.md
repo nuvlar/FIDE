@@ -38,8 +38,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |identifier|string|No|El identificador interno del médico (en la plataforma emisora de la receta).|
 |title|string|No|El título del médico (Dr., Dra., FT, etc.)|
 |name|string|Sí|El nombre del médico que emite la receta|
-|certSerial|string|Sí, en recetas de medicamentos controlados|URL de consulta del El del certificado público del médico (archivo .cer). Éste puede provenir del SAT o de alguna entidad
-diferente, como la AHM o secretaría de economía|
+|certSerial|string|Sí, en recetas de medicamentos controlados|URL de consulta del El del certificado público del médico (archivo .cer). Éste puede provenir del SAT o de alguna entidad diferente, como la AHM o secretaría de economía|
 |telephone|string|Sí|Número telefónico del médico (en formato internacional, +525844392754)|
 |email|string|No|Dirección de correo electrónico del médico|
 |qualification[]|object array Qualification|Sí|Arreglo de objetos de conteniendo la formación del médico|
