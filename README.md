@@ -83,7 +83,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |identifier|string|Sí|El identificador interno del medicamento (SKU de plataforma emisora)|
 |code|string|No|El identificador universal del medicamento (EAN), siguiendo estándares como  RxNorm, SNOMED CT, IDMP, etc. Si no hay un código a utilizar, escribir el nombre del medicamento|
 |form|string|No|El identificador de forma farmacéutica siguiendo el diccionario FIDE-FORM-1|
-|admin|string|Si|El identificador de la vía de administración siguiendo el diccionaro FIDE-ADMIN-1|
+|admin|string|No|El identificador de la vía de administración siguiendo el diccionaro FIDE-ADMIN-1|
 |fraction|int|Sí|La fracción legislativa del medicamento|
 |initDate|int (unixtime)|No|Fecha de inicio del tratamiento|
 |diagnostics[]|object array Diagnostic|No|Diagnósticos relacionados con el medicamento|
