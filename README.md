@@ -9,6 +9,8 @@ Este estándar está diseñado para ser compatible con los lineamientos de HL7 F
 
 Las recetas de FIDE se firman por medio del estándar JSON Web Token ([RFC 7519](https://tools.ietf.org/html/rfc7519)) con el algoritmo de firmado RS256 del estándar JSON Web Signature ([RFC 7515](https://tools.ietf.org/html/rfc7515)). 
 
+El JSON Web Token resultante de la firma de un payload de receta bajo la estructura especificada en la siguiente sección corresponde a la receta bajo el estandard FIDE.
+
 Las recetas con el estándar FIDE están diseñadas para poder ser contenidas en una URL de navegador web. Ya que el estándar JWT es compatible con el estándar URL, no hay necesidad de codificar antes de insertar una receta en una dirección web. La dirección URL puede ser almacenada en un un código QR para su rápida captura.
 
 ## Estructura de payload JSON Web Token de recetas (Ver. 0.2)
@@ -141,6 +143,8 @@ Un QR de receta FIDE contiene un apuntador a un servicio REST que proporcione me
 ```
 fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
 ```
+
+_Un QR correspondiente a una receta FIDE debe ser idempotente. La URL siempre debera regresar la misma receta FIDE (JWT) si se usan los mismos parametros URL._
 
 ## Ejemplo de una receta electrónica con el estándar FIDE-0.2
 
