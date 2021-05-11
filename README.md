@@ -139,9 +139,13 @@ Un QR de receta FIDE contiene un apuntador a un servicio REST que proporcione me
 2. El URL del endpoint al cual se va a acceder, con los siguientes parámetros GET:
    * iure: el identificador único de la receta electrónica
    * sd: el hash SHA-256 del JWT de la receta. Este parámetro es necesario para prevenir el filtrado de información personal mediante ataques por fuerza bruta.
+3. Se recomienda codificar el string formado en [Base 32](https://tools.ietf.org/html/rfc4648) y proceder a reemplazar cada caracter padding '=' por '0'. Esto para conseguir con una cadena conformada unicamente por caracteres alfanuméricos y evitar problemas de lectura del QR en equipos de escaneo cuya configuración de teclado pueda malinterpretar la lectura de caracteres especiales (‘:’, ‘’, ‘-’, '=', etc ...)
 
 ```
 fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+```
+```
+MZUWIZJ2NB2HI4DTHIXS63LJOJSWGZLUMFSGSZ3JORQWYLTDN5WS6YLQNEXXMMJPOJSWGZLUMEXHA2DQH5UXK4TFHUYS2OBVG4WTCNRRHE2TINJWGU2CM43EHU3TAMRSGVRDSNJQGE2GCMZQMFRDQYRVHAZDSMBWMMZWIYTBHE3TAMZUHFSDMZRVGNQTGNBWME2WIYRTHFQWKNBQGEYWIZRYGYZDMNBS
 ```
 
 _Un QR correspondiente a una receta FIDE debe ser idempotente. La URL siempre debera regresar la misma receta FIDE (JWT) si se usan los mismos parametros URL._
@@ -151,55 +155,76 @@ _Un QR correspondiente a una receta FIDE debe ser idempotente. La URL siempre de
 ### Cadena JWT:
 
 ```
-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoiRklERS0wLjIiLCJqdGkiOiIxMjM0NSIsImlhdCI6MTU5NDkzNjYxMCwiaXNzIjoiTVJEIiwicmVxdWVzdGVyIjp7ImlkZW50aWZpZXIiOjU0LCJjZXJ0U2VyaWFsIjoiMzAzMDMwMzAzODMxMzAzMDMwMzAzMDM0MzAzNjM0MzQzOTMyMzYzMyIsIm5hbWUiOiJKdWFuIFVyaWJlIFPDoW5jaGV6IiwidGVsZXBob25lIjoiMTIzMTIzMTIiLCJxdWFsaWZpY2F0aW9uIjp7Im5hbWUiOiJDaXJ1Z8OtYSBHZW5lcmFsIiwiaXNzdWVyIjoiVU5BTSIsImlzc3VlckFkZHJlc3MiOiJDZW50cm8gTcOpZGljbyBOYWNpb25hbCBTaWdsbyBYWEkgQXYuIEN1YXVodMOpbW9jIDMzMCwgRG9jdG9yZXMsIEN1YXVodMOpbW9jLCAwNjcyMCBDaXVkYWQgZGUgTcOpeGljbywgQ0RNWCIsImlkZW50aWZpZXIiOiIxMjMxMjMxMjMxMjMifX0sInN1YmplY3QiOnsiaWRlbnRpZmllciI6MTg3MSwibmFtZSI6Ik1pZ3VlbCBHb256w6FsZXogRmVybsOhbmRleiJ9LCJtZWRpY2F0aW9uIjpbeyJpZGVudGlmaWVyIjozNTc3LCJmcmFjdGlvbiI6NSwibmFtZSI6IkFOQUxHRU4gMjIwTUcgVEFCIEMvMjAiLCJkb3NhZ2VJbnN0cnVjdGlvbiI6eyJ0ZXh0IjoiVG9tYXIgdW5hIHRhYmxldGEgY2FkYSA4IGhvcmFzIn19XSwiZW52aXJvbm1lbnQiOiJkZXYifQ.HqWy8jPK2SlAxTo1dkq8DHClj6jZNW57rNRTzQW0CYHNrGWYzci_CdhFjtpsQVTP30tXVHYyDGkJTIYx6LuebeGfVlOah9FCjPq5K9aDqzKBkW2QQVzzng5lYcx5_3YbzxjsYZiQA6dUxoZVmiDta8D8jFNsX57D14UxZ4RNsFE
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoiRklERS0wLjIiLCJqdGkiOiIxLTg1Ny0xNjE5NTQ1NjU0IiwiaXNzIjoiTVJEIiwiaWF0IjoxNjE5NTQ1NjU0LCJkdGMiOjE2MTk1NDU2NTQsImVudmlyb25tZW50IjoiZGlzdCIsInJlcXVlc3RlciI6eyJpZGVudGlmaWVyIjoxLCJjZXJ0U2VyaWFsIjoiaHR0cHM6XC9cL2FwaXNuZXQuY29sLmdvYi5teFwvd3NTaWduR29iXC9hcGlWMVwvT2J0ZW5lclwvQ2VydGlmaWNhZG8_c2VyaWFsPTMwMzAzMDMwMzEzMDMwMzAzMDMwMzAzNTMwMzYzNjM4MzYzMTM3MzUiLCJuYW1lIjoiTHVpcyBFc3Bpbm9zYSBTaWVycmEiLCJxdWFsaWZpY2F0aW9uIjpbeyJuYW1lIjoiTmV1cm9sb2dcdTAwZWRhIiwiaWRlbnRpZmllciI6IjI0NjA3MjkiLCJpc3N1ZXIiOiJGYWN1bHRhZCBkZSBNZWRpY2luYSBVQVNMUCJ9XSwiYWRkcmVzcyI6eyJsaW5lIjoiQmF0YWxsXHUwMGYzbiBkZSBTYW4gUGF0cmljaW8gMTEyLCBTYW4gUGVkcm8gR2FyemEgR2FyY1x1MDBlZGEsIE4uIEwuIn0sInRlbGVwaG9uZSI6Iis1MjgxODg4ODA2NzUifSwic3ViamVjdCI6eyJpZGVudGlmaWVyIjo4NTcsIm5hbWUiOiJMdWlzIFBydWViYSBQcnVlYmEgTVJEIiwid2VpZ2h0Ijo3OCwiaGVpZ2h0IjoxNjcsImJpcnRoRGF0ZSI6IjE5NjYtMDUtMjIifSwibWVkaWNhdGlvbiI6W3siaWRlbnRpZmllciI6MTE0MywibmFtZSI6IkNJUFJPIFhSIDUwME1HIFRBQiBDXC83Iiwic3Vic3RhbmNlIjoiQ0lQUk9GTE9YQUNJTk8iLCJkb3NhZ2VJbnN0cnVjdGlvbiI6eyJ0ZXh0IjoiUHJ1ZWJhIEJ1c2NhbWVkIn0sImZyYWN0aW9uIjo0fV0sImNlcnRpZmljYXRlVVJMIjoiaHR0cHM6XC9cL3d3dy5taXJlY2V0YWRpZ2l0YWwuY29tXC9jZXJ0c1wvY2VydDEifQ.hpIi2MV_iNjFYtr4bRgR2F4LMAscNQXxCySfmpW_--uEwBqcpEggdsXrOuF3SU1m1n9rXB7Kg47_m8m6Pjg919gBTo_6A0JLcOocwCbP4-zk_rHXHpZkQ56_U-gMezptw92mguSn81F9TMG8Q-bMsjZeUCBBR05OE35qVi8veq97T-GM88SnXun1lOp29cudTWOHw4RPd7MeaQ_FcKMcJ2cIYdM18IdJmvG9sbJyw7YI2q5KphbT0d_BQzIDS4PYutbwS11WYX7SBXmBICZadv5XgW7cNOMcaT2TZiIVg7bJaDoxFqTRHwtyZi0FNJyT48j-p_cn6CRsH5_fMKYA6A
 ```
+
+### Certificado público para validar firma:
+
+https://apisnet.col.gob.mx/wsSignGob/apiV1/Obtener/Certificado?serial=3030303031303030303030353036363836313735
 
 ### Payload decodificado:
 
 ```json
 {
   "version": "FIDE-0.2",
-  "jti": "12345",
-  "iat": 1594936610,
+  "jti": "1-857-1619545654",
   "iss": "MRD",
+  "iat": 1619545654,
+  "dtc": 1619545654,
+  "environment": "dist",
   "requester": {
-    "identifier": 54,
-    "certSerial": "3030303038313030303030343036343439323633",
-    "name": "Juan Uribe Sánchez",
-    "telephone": "12312312",
-    "qualification":{
-      "name": "Cirugía General",
-      "issuer": "UNAM",
-      "issuerAddress":"Centro Médico Nacional Siglo XXI Av. Cuauhtémoc 330, Doctores, Cuauhtémoc, 06720 Ciudad de México, CDMX",
-      "identifier":"123123123123"
-    }
+    "identifier": 1,
+    "certSerial": "https://apisnet.col.gob.mx/wsSignGob/apiV1/Obtener/Certificado?serial=3030303031303030303030353036363836313735",
+    "name": "Luis Espinosa Sierra",
+    "qualification": [
+      {
+        "name": "Neurología",
+        "identifier": "2460729",
+        "issuer": "Facultad de Medicina UASLP"
+      }
+    ],
+    "address": {
+      "line": "Batallón de San Patricio 112, San Pedro Garza García, N. L."
+    },
+    "telephone": "+528188880675"
   },
   "subject": {
-    "identifier": 1871,
-    "name": "Miguel González Fernández"
+    "identifier": 857,
+    "name": "Luis Prueba Prueba MRD",
+    "weight": 78,
+    "height": 167,
+    "birthDate": "1966-05-22"
   },
   "medication": [
     {
-      "identifier": 3577,
-      "fraction":5,
-      "name": "ANALGEN 220MG TAB C/20",
-      "dosageInstruction":{
-         "text":"Tomar una tableta cada 8 horas"
-      }
+      "identifier": 1143,
+      "name": "CIPRO XR 500MG TAB C/7",
+      "substance": "CIPROFLOXACINO",
+      "dosageInstruction": {
+        "text": "Prueba Buscamed"
+      },
+      "fraction": 4
     }
   ],
-  "environment": "dev"
+  "certificateURL": "https://www.mirecetadigital.com/certs/cert1"
 }
 ```
 
 ### QR de la receta:
 
-![Receta QR](fide_qr.png?raw=true "fide:https://mirecetadigital.com/receta.php?iure=12345&sd=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08")
+QR FIDE
+
+![Receta QR](fide_qr.png?raw=true "fide:https://mirecetadigital.com/api/v1/receta.php?iure=1-857-1619545654&sd=70225b95014a30ab8b582906c3dba970349d6f53a346a5db39ae4011df862642")
+
+QR FIDE base32
+
+![Receta QR](fide_qr_b32.png?raw=true "MZUWIZJ2NB2HI4DTHIXS63LJOJSWGZLUMFSGSZ3JORQWYLTDN5WS6YLQNEXXMMJPOJSWGZLUMEXHA2DQH5UXK4TFHUYS2OBVG4WTCNRRHE2TINJWGU2CM43EHU3TAMRSGVRDSNJQGE2GCMZQMFRDQYRVHAZDSMBWMMZWIYTBHE3TAMZUHFSDMZRVGNQTGNBWME2WIYRTHFQWKNBQGEYWIZRYGYZDMNBS")
+
 
 ## Proceso de Validación de recetas 
 
 1. El paciente acude a una Farmacia (digital o físicamente) con una Receta Electrónica 
-2. Si se trata de una farmacia física, el empleado escanea el QR de la receta para obtener la URL de la misma, si se trata de una farmacia digital, el programa de la farmacia recibe la URL de la receta directamente
+2. Si se trata de una farmacia física, el empleado escanea el QR de la receta para obtener la URL de la misma, si se trata de una farmacia digital, el programa de la farmacia recibe la URL de la receta directamente. En caso de que el QR se encuentre codificado en Base32 como se especificó anteriormente, revertir el reemplazo de caracteres '=' por '0' y decodificar el QR Base32.
 3. El programa de farmacia hace una petición al URL de la receta
 4. El servidor externo regresa el JWT
 5. El programa de farmacia verifica la validez con el estándar JWT la receta
@@ -217,7 +242,7 @@ Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
 1. Extraer información del payload del JWT. Esto se logra decodificando el payload (la sección del JWT comprendida entre dos puntos (.)) mediante el estándar [Base64URL](https://base64.guru/standards/base64url) y después interpretándolo como una cadena en formato JSON.
 2. Obtener el número de serie del certificado digital del médico (el campo `requester.certSerial`).
 3. Solicitar al API del SAT el certificado del médico (en la url `https://apisnet.col.gob.mx/wsSignGob/apiV1/Obtener/Certificado?serial=<elnumeroserialdelmedico>`).
-4. Verificar que los datos del certificado coincidan con los datos del médico (su cédula profesional se encuentra en el campo `med.cdp`).
+4. Verificar que los datos del certificado coincidan con los datos del médico (su cédula profesional se encuentra en el campo `requester.qualification[n].identifier`).
 5. Validar el JWT de la receta mediante el estándar JWT y el algoritmo RS256.
 6. Validar que el campo `env` de la receta sea igual a "dist".
 
