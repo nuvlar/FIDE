@@ -6,13 +6,13 @@ El estándar FIDE de recetas electrónicas es un estándar desarrollado de maner
 
 Este estándar está diseñado para ser compatible con los lineamientos de HL7 FIHR, permitiendo una implementación sencilla en sistemas que ya utilicen este estándar, así como en sistemas que no lo hagan.
 
-Para consultar la propuesta de modelo, se puede referir a: [a relative link](Model.md)
+Para consultar la propuesta de modelo, se puede referir a: [Modelo de operación propuesto](Model.md)
 
 Como propuesta inicial de desarrollo, las recetas de FIDE se firman por medio del estándar JSON Web Token ([RFC 7519](https://tools.ietf.org/html/rfc7519)) con el algoritmo de firmado RS256 del estándar JSON Web Signature ([RFC 7515](https://tools.ietf.org/html/rfc7515)). Queda abierta la posibilidad de incorporar posteriormente distintas tecnologías respetando el esquema de la receta. 
 
 Para simplificar la documentación se denominará "Receta Electrónica Firmada" o "REF" al contenido (payload) que se utilizará como herramienta de comunicación. En primera instancia, se refiere al "JWT", sin embargo, puede ser extendido con otros lenguajes
 
-[a relative link](JSON.md)
+[Estructura JWT](JSON.md)
 
 ## Estructura de recetas (Ver. 0.2)
 
