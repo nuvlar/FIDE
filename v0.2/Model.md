@@ -12,9 +12,12 @@ Se propone un sistema de trabajo que permita la interacción de múltiples parti
 * Sistemas de salud 
 * Autoridades competentes
 
-Adicionalmente, se plantea la creación de una *Unidad centralizadora*, misma que sería responsable del manejo final de los estados de cada receta y de simplificar los procesos de comunicación entre todos los participantes del modelo.
+Los servicios de validación y revisión de datos (para médicos y recetas) deben poder mantener información actualizada en todo momento y exponerla a los demás participantes del modelo. Aunque pueden emplearse esquemas de Servicios Distribuídos, para fines de simplicidad operacional, se propone que se trabajen a través de una Unidad Centralizadora de los mismos.
 
-## Consideraciones del modelo
+De ésta forma, mediante la creación de la *Unidad centralizadora*, misma que sería responsable del manejo final de los estados de cada receta (emitida, parcialmente despachada, totalmente despachada, cancelada, expirada) y de simplificar los procesos de comunicación entre todos los participantes del modelo.  
+
+
+## Consideraciones del modelo - Unidad Centralizadora
 
 Un participante que desee generar recetas, deberá registarse en la unidad centralizadora, misma que le otorgará un prefijo de identificación y el acceso a los estándares de desarrollo disponibles. 
 

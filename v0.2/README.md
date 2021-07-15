@@ -2,17 +2,19 @@
 
 *Aviso: La versión 0.2 de este estándar continúa en desarrollo activo, para una versión estable del estándar favor de referir a la versión [0.1](estandar-0-1.md)*
 
-El estándar FIDE de recetas electrónicas es un estándar desarrollado de manera conjunta con distintas empresas y organizadores del sector médico diseñado para crear una receta autocontenida y sin necesidad de un servidor centralizado de validación. 
+El estándar FIDE de recetas electrónicas es un estándar desarrollado de manera conjunta con distintas empresas y organizadores del sector médico diseñado para crear una receta autocontenida y sin necesidad de un servidor centralizado de validación para la mayoría de los casos. 
 
 Este estándar está diseñado para ser compatible con los lineamientos de HL7 FIHR, permitiendo una implementación sencilla en sistemas que ya utilicen este estándar, así como en sistemas que no lo hagan.
 
-Para consultar la propuesta de modelo, se puede referir a: [Modelo de operación propuesto](Model.md)
+Para consultar la propuesta de modelo, se puede referir a: [Modelo de operación FIDE con Unidad Centralizadora](Model.md)
 
 Como propuesta inicial de desarrollo, las recetas de FIDE se firman por medio del estándar JSON Web Token ([RFC 7519](https://tools.ietf.org/html/rfc7519)) con el algoritmo de firmado RS256 del estándar JSON Web Signature ([RFC 7515](https://tools.ietf.org/html/rfc7515)). Queda abierta la posibilidad de incorporar posteriormente distintas tecnologías respetando el esquema de la receta. 
 
-Para simplificar la documentación se denominará "Receta Electrónica Firmada" o "REF" al contenido (payload) que se utilizará como herramienta de comunicación. En primera instancia, se refiere al "JWT", sin embargo, puede ser extendido con otros lenguajes
+Para simplificar la documentación se denominará "Receta Electrónica Firmada" o "REF" al contenido (payload) que se utilizará como herramienta de comunicación. En primera instancia, se refiere al "JWT", sin embargo, puede ser extendido con otras tecnologías.
 
-[Estructura JWT](JSON.md)
+### Tecnologías compatibles
+- [Estructura JWT](JSON.md) *Propuesta
+- Estructura XML
 
 ## Estructura de recetas (Ver. 0.2)
 
@@ -41,7 +43,7 @@ El payload de las recetas deben de tener la siguiente estructura
 |identifier|string|No|El identificador interno del médico (en la plataforma emisora de la receta).|
 |title|string|No|El título del médico (Dr., Dra., FT, etc.)|
 |name|string|Sí|El nombre del médico que emite la receta|
-|certSerial|string|Sí, en recetas de medicamentos controlados|URL de consulta del El del certificado público del médico (archivo .cer). Éste puede provenir del SAT o de alguna entidad diferente, como la AHM o secretaría de economía|
+|certSerial|string|Sí, en recetas de medicamentos controlados|URL de consulta del El del certificado público del médico (archivo .cer). Éste puede provenir del SAT o de alguna entidad diferente, como la secretaría de economía o la autoridad competente |
 |telephone|string|Sí|Número telefónico del médico (en formato internacional, +525844392754)|
 |email|string|No|Dirección de correo electrónico del médico|
 |qualification[]|object array Qualification|Sí|Arreglo de objetos de conteniendo la formación del médico|
@@ -160,10 +162,10 @@ _Un QR correspondiente a una receta FIDE debe ser idempotente. La URL siempre de
 3. El programa de farmacia hace una petición al URL de la receta
 4. El servidor externo regresa la REF
 5. El programa de farmacia verifica la validez con el estándar REF
-6. El programa de farmacia solicita a la entidad centralizadora el estátus de la receta.
+6. El programa de farmacia solicita al servicio de validación el estátus de la receta.
 7. La entidad regresa los datos de la receta, o un error si ese médico no existe o la receta no es válida.
-8. El programa de farmacia se encarga del despacho y avisar a la entidad central acerca del surtido de la receta.
-9. La entidad centralizadora despacha un webhook al endpoint contenido en el cuerpo de la REF(si es que se contiene).
+8. El programa de farmacia se encarga del despacho y avisar al servicio de validación acerca del surtido de la receta.
+9. El servicio de validación despacha un webhook al endpoint contenido en el cuerpo de la REF(si es que se contiene).
 
 ## Verificación de veracidad de recetas sin relación de confianza
 
@@ -181,10 +183,10 @@ Los pasos para validar una receta con el estándar FIDE-0.2 son los siguientes:
 Una vez que estos pasos están completados puedes proceder a verificar el estátus de la receta. Si la receta no contiene medicamentos controlados puedes solamente utilizar el paso 1 y surtir la receta.
 
 
-## Verificación de Estatus de Receta en Unidad Centralizadora
-Para llevar a cabo una solicitud de estatus sobre la unidad central, se requiere el IURD correspondiente, así como el sello hash sha256 del contenido total de la REF, ambos separados por un guión.
+## Verificación de Estatus de Receta mediante *Servicios de Validación*
+Para llevar a cabo una solicitud de estatus al servicio de validación, se requiere el IURD correspondiente, así como el sello hash sha256 del contenido total de la REF, ambos separados por un guión.
 
-Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emite una respuesta con los siguientes datos:
+Si el IURD y el hash en la solicitud son válidos, el servicio de validación emite una respuesta con los siguientes datos:
 
 |Campo|Descripción|
 |--|--|
@@ -196,7 +198,7 @@ Si el IURD y el hash en la solicitud son válidos, la unidad centralizadora emit
 |tratamiento\[uid\].unidad|Unidad referente a la presentación del medicamento|
 
 Observaciones sobre seguridad y privacidad:
-* La Unidad Centralizadora no expone datos sensibles relativos al médico o al paciente,
+* El servicio de validación no expone datos sensibles relativos al médico o al paciente,
 * La única manera de saber qué medicamentos se han surtido de la receta es tener la receta físicamente para poder correr el algoritmo sha-256 sobre ella y averiguar su llave.
 
 ### FIDE-FREQUENCY-1 Frecuencias de tratamiento
@@ -276,7 +278,7 @@ La siguiente tabla muestra las medidas utilizables en el estándar. Todos los si
 |Nebulizaciones|nbl|
 
 ### Transformaciones de Unidad / Cantidad
-Para entregar la información más completa, el sistema de la Unidad Centralizadora, realizará una transformación basada en la duración del tratamiento, para calcular la cantidad total de unidades que se deben surtir (tomando como base la forma farmacéutica). 
+Para entregar la información más completa, el sistema de validación, realizará una transformación basada en la duración del tratamiento, para calcular la cantidad total de unidades que se deben surtir (tomando como base la forma farmacéutica). 
 
 Por ejemplo:
 ```
@@ -294,7 +296,7 @@ Por ejemplo:
 ```
 
 ## Notificación de Despacho
-Cada entidad farmacológica que realice el despacho de medicamentos realizará una notificación a la unidad centralizadora empleando el servicio de notificación de despapacho. De ésta manera, la entidad centralizadora podrá llevar el seguimiento de los medicamentos surtidos y notificar a su vez a los interesados. 
+Cada entidad farmacológica que realice el despacho de medicamentos realizará una notificación al servicio de validación empleando el servicio de notificación de despapacho. De ésta manera, los servicios de validación podrán llevar el seguimiento de los medicamentos surtidos y notificar a su vez a los interesados. 
 
 ### Objeto de Despacho
 
@@ -341,7 +343,7 @@ Cada entidad farmacológica que realice el despacho de medicamentos realizará u
 |substitution.medication|Objeto medicamento que sustituye al tratamiento original|
 
 ## Notificación de Evento de Seguimiento
-De la misma manera, las entidades de seguimiento pueden alimentar a la Unidad Centralizadora con eventos de seguimiento sobre los medicamentos para mantener informados a los interesados
+De la misma manera, las entidades de seguimiento pueden alimentar a los servicios de validación con eventos de seguimiento sobre los medicamentos para mantener informados a los interesados
 
 |Campo|Descripción|
 |-|-|

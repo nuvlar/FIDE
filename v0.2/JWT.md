@@ -1,3 +1,11 @@
+# JWT
+
+JWT (JSON Web Token) es un estándar qué está dentro del documento RFC 7519.
+
+En el mismo se define un mecanismo para poder propagar entre dos partes, y de forma segura, la identidad de un determinado usuario, además con una serie de claims o privilegios.
+
+Estos privilegios están codificados en objetos de tipo JSON, que se incrustan dentro de del payload o cuerpo de un mensaje que va firmado digitalmente.
+
 # Estándar de recetas electrónicas FIDE JSON
 
 El JSON Web Token resultante de la firma de un payload de receta bajo la estructura especificada en la siguiente sección corresponde a la receta bajo el estandard FIDE.
