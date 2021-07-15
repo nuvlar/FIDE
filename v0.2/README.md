@@ -13,7 +13,7 @@ Como propuesta inicial de desarrollo, las recetas de FIDE se firman por medio de
 Para simplificar la documentación se denominará "Receta Electrónica Firmada" o "REF" al contenido (payload) que se utilizará como herramienta de comunicación. En primera instancia, se refiere al "JWT", sin embargo, puede ser extendido con otras tecnologías.
 
 ### Tecnologías compatibles
-- [Estructura JWT](JSON.md) *Propuesta
+- [Estructura JWT](JWT.md) *Propuesta
 - Estructura XML
 
 ## Estructura de recetas (Ver. 0.2)
